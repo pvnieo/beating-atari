@@ -3,5 +3,5 @@ keras
 pyyaml
 opencv-python
 gym
-'gym[atari]'
+gym[atari]
 tensorboard

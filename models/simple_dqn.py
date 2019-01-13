@@ -13,28 +13,30 @@ from utils.utils import create_dir_in_checkpoint, CHECKPOINT_DIR, number_dir
 
 
 class SimpleDQN(BaseModel):
-    def __init__(self, n_actions, args):
+    def __init__(self, n_actions, args, train=True):
         self.preprocessor = AtariPreprocessor()
         self.n_actions = n_actions
-
-        # Experience replay
-        self.memory = Memory(args.memory_size)
-
-        # Create check directory
         self.save_dir = self.name + '_' + args.game
-        create_dir_in_checkpoint(self.save_dir)
-        create_dir_in_checkpoint(self.save_dir + "/board")
-        n = number_dir(join(CHECKPOINT_DIR, self.save_dir, "board"))
-        self.save_board = join(CHECKPOINT_DIR, self.save_dir, "board", str(n+1))
         self.save_file = join(CHECKPOINT_DIR, self.save_dir, "model.h5")
+
+        if train:
+            # Experience replay
+            self.memory = Memory(args.memory_size)
+
+            # Create check directory
+            create_dir_in_checkpoint(self.save_dir)
+            create_dir_in_checkpoint(self.save_dir + "/board")
+            n = number_dir(join(CHECKPOINT_DIR, self.save_dir, "board"))
+            self.save_board = join(CHECKPOINT_DIR, self.save_dir, "board", str(n+1))
 
         # Define model
         self.model = self._define_model(n_actions)
-        optimizer = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
-        self.model.compile(optimizer, loss='mse')
-        self.board = TensorBoard(log_dir=self.save_board)
-        # self.ckp = ModelCheckpoint(
-        #     filepath=self.best_file, verbose=1, save_best_only=True, save_weights_only=True)
+        if train:
+            optimizer = RMSprop(lr=0.00025, rho=0.95, epsilon=0.01)
+            self.model.compile(optimizer, loss='mse')
+            self.board = TensorBoard(log_dir=self.save_board)
+            # self.ckp = ModelCheckpoint(
+            #     filepath=self.best_file, verbose=1, save_best_only=True, save_weights_only=True)
 
     @property
     def name(self):

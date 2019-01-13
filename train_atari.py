@@ -11,8 +11,7 @@ from utils.logger import Logger
 
 
 parser = argparse.ArgumentParser(
-    description='An implementation of multiple approachs to automatically colorize B/W images',
-    usage='python3 train.py <model> [<args>]')
+    description='Train multiple RL algorithms to beat Atari 2600 games')
 parser.add_argument('-m', '--model', help='RL model to use',
                     choices=["simple_dqn"], default="simple_dqn")
 parser.add_argument('--training-episodes',
@@ -31,7 +30,7 @@ parser.add_argument('--batch-size', help="Batch size", type=int, default=32)
 parser.add_argument('--explo-steps',
                     help="Number of frames over wich the initial value of epsilon is linearly annealed",
                     type=int, default=850000)
-parser.add_argument('--save_freq', help="Frequency of saving model", type=int, default=5)
+parser.add_argument('--save_freq', help="Frequency of saving model", type=int, default=10)
 parser.add_argument('--no_continue', help='Train model from scratch even if saved model exsits', action="store_true")
 
 args = parser.parse_args()
@@ -56,7 +55,7 @@ if __name__ == '__main__':
     # Continue training
     if agent.is_model_saved and not args.no_continue:
         agent.load_model()
-    
+
     # Create Logger
     logger = Logger(args)
 
@@ -131,6 +130,6 @@ if __name__ == '__main__':
                 break
 
         if (episode + 1) % args.save_freq == 0:
-            agent.save_model()
+            agent.save_model(episode)
     tot = int(time() - begin)
     print("Training Took:", tot)

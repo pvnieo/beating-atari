@@ -91,8 +91,9 @@ class BaseModel:
     def predict(self):
         pass
 
-    def save_model(self):
+    def save_model(self, episode):
         self.model.save_weights(self.save_file)
+        self.model.save_weights(self.save_file[:-3] + str(episode) + ".h5")
         print("Model saved!")
 
     def is_model_saved(self):
