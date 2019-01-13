@@ -19,7 +19,7 @@ parser.add_argument('--training-episodes',
 parser.add_argument(
     '--max-steps', help="Max possible steps in a episode", type=int, default=50000)
 parser.add_argument(
-    '--replay-start', help='Number of frames to populate the memory before training', default=128)
+    '--replay-start', help='Number of frames to populate the memory before training', type=int, default=128)
 parser.add_argument(
     '--memory-size', help='Number of experiences the Memory can keep', type=int, default=1000000)
 parser.add_argument(
