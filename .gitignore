@@ -102,3 +102,8 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+# ignore this
+tests.ipynb
+records/
+checkpoints/
