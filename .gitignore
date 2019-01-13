@@ -107,3 +107,4 @@ venv.bak/
 tests.ipynb
 records/
 checkpoints/
+logs/
