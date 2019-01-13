@@ -85,7 +85,7 @@ if __name__ == '__main__':
             agent.memory.add((state, action, reward, next_state, is_terminal))
 
             # Restart env
-            frame = env.reset
+            frame = env.reset()
             new_game = True
         else:
             agent.memory.add((state, action, reward, next_state, is_terminal))
