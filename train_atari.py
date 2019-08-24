@@ -1,135 +1,65 @@
-# std
-import argparse
-from time import time
+# stdlib
+import sys
+from os import makedirs
 # 3p
+import torch
+from torch.optim import Adam
 import gym
-import numpy as np
 # project
-from models.simple_dqn import SimpleDQN
-from utils.utils import update_epsilon
+from algorithms.dqn import DQN
+from envs.gym_env import GymEnv
+from networks.dqn_15 import DQN15
+from utils.epsilon_greedy import AnnealedEpsilonGreedyPolicy
+from utils.experience_replay import SimpleExperienceReplay
 from utils.logger import Logger
 
+# ### global constant ### #
+OUTPUT_DIR = "outputs"
+ENV_NAME = 'Breakout-v4'
 
-parser = argparse.ArgumentParser(
-    description='Train multiple RL algorithms to beat Atari 2600 games')
-parser.add_argument('-m', '--model', help='RL model to use',
-                    choices=["simple_dqn"], default="simple_dqn")
-parser.add_argument('--training-episodes',
-                    help='Number of trainig episodes', type=int, default=50)
-parser.add_argument(
-    '--max-steps', help="Max possible steps in a episode", type=int, default=50000)
-parser.add_argument(
-    '--replay-start', help='Number of frames to populate the memory before training', type=int, default=128)
-parser.add_argument(
-    '--memory-size', help='Number of experiences the Memory can keep', type=int, default=1000000)
-parser.add_argument(
-    '--skip-frames', help='Number of skiped frames', type=int, default=4)
-parser.add_argument('--game', help='The chosen game', type=str,
-                    default='SpaceInvaders', choices=['SpaceInvaders', 'BreakoutDeterministic'])
-parser.add_argument('--batch-size', help="Batch size", type=int, default=32)
-parser.add_argument('--explo-steps',
-                    help="Number of frames over wich the initial value of epsilon is linearly annealed",
-                    type=int, default=850000)
-parser.add_argument('--save_freq', help="Frequency of saving model", type=int, default=10)
-parser.add_argument('--no_continue', help='Train model from scratch even if saved model exsits', action="store_true")
+EXPLORATION_STEPS = 500
+MEM_MAX_SIZE = 1000
+LR = 0.001
+BATCH_SIZE = 64
+EPSILON_MIN = 0.1
+EPSILON_MAX = 1.
+SCREEN_SIZE = (84, 84)
+NO_OP_MAX = 30
+GRAYSCALE = True
+CLIP_REWARD = True
+FRAME_SKIP = 4
+TERMINAL_ON_LIFE_LOSS = True
 
-args = parser.parse_args()
+AGENT_HISTORY_LENGTH = 4
+CUDA = True
+DISCOUNT_FACTOR = 0.99
 
-# TRAINING HYPERPARAMETERS
-EXPLORATION_MAX = 1.0
-EXPLORATION_MIN = 0.1
-EXPLORATION_TEST = 0.02
-EXPLORATION_STEPS = args.explo_steps
-EXPLORATION_DECAY = (EXPLORATION_MAX - EXPLORATION_MIN) / EXPLORATION_STEPS
+# fit args
+N_FIT_EP = 200
+EP_MAX_STEP = 1000
+REPLAY_START_SIZE = 10000
 
-# Create environnement
-env = gym.make(args.game + '-v' + str(args.skip_frames))
-n_actions = env.action_space.n
+gym_env = gym.make('Breakout-v4')
+device = torch.device('cuda') if (CUDA and torch.cuda.is_available()) else torch.device('cpu')
+
+
+def main():
+    env = GymEnv(gym_env, terminal_on_life_loss=TERMINAL_ON_LIFE_LOSS, noop_max=NO_OP_MAX, frame_skip=FRAME_SKIP,
+                 num_stack=AGENT_HISTORY_LENGTH, screen_size=SCREEN_SIZE, grayscale=GRAYSCALE, clip_reward=CLIP_REWARD)
+    model = DQN15(SCREEN_SIZE, nc=AGENT_HISTORY_LENGTH, num_actions=env.action_space.n)
+    model.to(device)
+    optimizer = Adam(model.parameters(), lr=LR)
+    policy = AnnealedEpsilonGreedyPolicy(epsilon_max=EPSILON_MAX, epsilon_min=EPSILON_MIN, exploration_steps=EXPLORATION_STEPS)
+    memory = SimpleExperienceReplay(max_size=MEM_MAX_SIZE, batch_size=BATCH_SIZE)
+    logger = Logger()
+
+    # create agent
+    dqn_agent = DQN(env, model, policy, memory, optimizer, OUTPUT_DIR, logger, DISCOUNT_FACTOR)
+
+    # train agent
+    dqn_agent.fit(n_episodes=N_FIT_EP, ep_max_step=EP_MAX_STEP, replay_start_size=REPLAY_START_SIZE)
+
 
 if __name__ == '__main__':
-    begin = time()
-    # Create model
-    if args.model == 'simple_dqn':
-        agent = SimpleDQN(n_actions, args)
-
-    # Continue training
-    if agent.is_model_saved and not args.no_continue:
-        agent.load_model()
-
-    # Create Logger
-    logger = Logger(args)
-
-    # Populate memory
-    frame = env.reset()
-    new_game = True
-
-    print("######### Population Memory #########")
-    for _ in range(args.replay_start):
-        if new_game:
-            state, stacked_frames = agent.preprocessor.stack_frames(frame, True)
-            new_game = False
-        else:
-            state, stacked_frames = agent.preprocessor.stack_frames(frame, False, stacked_frames)
-
-        # Perform a random action
-        action = env.action_space.sample()
-        next_frame, reward, is_terminal, _ = env.step(action)
-
-        # Stack next state
-        next_state, stacked_frames = agent.preprocessor.stack_frames(next_frame, False, stacked_frames)
-
-        if is_terminal:
-            next_state = np.zeros(state.shape, dtype='uint8')
-
-            # Add to memory
-            agent.memory.add((state, action, reward, next_state, is_terminal))
-
-            # Restart env
-            frame = env.reset()
-            new_game = True
-        else:
-            agent.memory.add((state, action, reward, next_state, is_terminal))
-            frame = next_frame
-
-    print("Memory size:", len(agent.memory))
-    print("######### Memory Populated #########")
-
-    # Main loop
-    epsilon = 1.0 + EXPLORATION_DECAY
-    rewards = []
-
-    for episode in range(args.training_episodes):
-        # Initialization
-        episode_reward = []
-        frame = env.reset()
-        state, stacked_frames = agent.preprocessor.stack_frames(frame, True)
-        step = 0
-        mem_size = len(agent.memory)
-        since = time()
-
-        while step < args.max_steps:
-            print("Episode: {} | Num steps: {}\r".format(episode, step), end="")
-            step += 1
-            epsilon = update_epsilon(epsilon, EXPLORATION_DECAY, EXPLORATION_MIN)
-
-            # One q_iteration
-            state, reward, is_terminal, loss = agent.q_iteration(env, state, stacked_frames, args.batch_size, epsilon)
-            episode_reward.append(reward)
-
-            # Log
-            logger.log([episode, step, epsilon, loss, reward, mem_size, 0, 0])
-
-            if is_terminal:
-                took = round(time() - since, 2)
-                mem_size = len(agent.memory)
-                total_reward = np.sum(episode_reward)
-                rewards.append(total_reward)
-                print("Episode: {} | Num steps: {} | Epsilon: {} | Reward: {} | Took: {}s | Mem size: {}".format(episode, step,
-                      epsilon, total_reward, took, mem_size))
-                logger.log([episode, step, epsilon, loss, reward, mem_size, took, total_reward])
-                break
-
-        if (episode + 1) % args.save_freq == 0:
-            agent.save_model(episode)
-    tot = int(time() - begin)
-    print("Training Took:", tot)
+    main()
+    sys.exit(0)

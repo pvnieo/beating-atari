@@ -1,7 +1,7 @@
-tensorflow-gpu
-keras
-pyyaml
-opencv-python
 gym
 gym[atari]
-tensorboard
+numpy
+torch
+torchvision
+tqdm
+lz4

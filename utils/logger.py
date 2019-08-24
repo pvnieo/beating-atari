@@ -1,22 +1,21 @@
-# std
-import csv
-import os
-import datetime
+# stdlib
+from os.path import join, exists
+from os import makedirs
+from datetime import datetime
 # 3p
-
-LOGS_DIR = 'logs'
-if not os.path.exists(LOGS_DIR):
-    os.makedirs(LOGS_DIR)
+from torch.utils.tensorboard import SummaryWriter
 
 
 class Logger:
-    def __init__(self, args):
-        name = args.model + args.game + '_{}.csv'.format(str(datetime.datetime.now()))
-        self.csv_path = os.path.join(LOGS_DIR, name)
-        header = ["episode", "step", "epsilon", "loss", "reward", "mem_size", "took", "tot_reward"]
-        self.log(header)
+    def __init__(self):
+        self.tb_writer = SummaryWriter()
 
-    def log(self, row):
-        with open(self.csv_path, "a") as f:
-            writer = csv.writer(f)
-            writer.writerow(row)
+    def log_dir(self, out_dir):
+        self.dir = join(out_dir, "logs", str(datetime.now())[:16])
+        if not exists(self.dir):
+            makedirs(self.dir)
+        self.tb_writer = SummaryWriter(log_dir=self.dir)
+
+    def __del__(self):
+        self.tb_writer.flush()
+        self.tb_writer.close()
