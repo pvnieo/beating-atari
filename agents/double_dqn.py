@@ -1,3 +1,4 @@
+# stdlib
 # 3p
 import torch
 from torch.nn.functional import smooth_l1_loss
@@ -5,22 +6,23 @@ from torch.nn.functional import smooth_l1_loss
 from .base_model import DQNBasedModel
 
 
-class DQN(DQNBasedModel):
+class DoubleDQN(DQNBasedModel):
     def __init__(self, env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor=0.99):
         super().__init__(env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor)
 
     @property
     def name(self):
-        return "dqn"
+        return "double_dqn"
 
-    def fit_batch(self, frames, actions, rewards, next_frames, is_terminals):
-        target_q_values = self.model(next_frames)
+    def fit_batch(self, states, actions, rewards, next_states, is_terminals):
+        target_q_values = self.target_net(next_states)
         # If terminal, we use y_i = r_i instead of y_i = r_i + gamma * max Q
         target_q_values[is_terminals] = 0
-        # Compute targets: y_i = r_i + gamma * max Q
-        target_q_values = torch.FloatTensor(rewards) + self.discount_factor * torch.max(target_q_values, dim=1)[0]
+        # Compute targets: y_i = r_i + gamma * Q- (max Q)
+        target_q_values = torch.FloatTensor(rewards) + self.discount_factor * \
+            target_q_values[range(states.size(0)), torch.max(self.online_net(next_states), dim=1)]
         # compute loss
-        predicted_q_values = torch.max(self.model(frames), dim=1)[0]
+        predicted_q_values = torch.max(self.online_net(states), dim=1)[0]
         loss = smooth_l1_loss(predicted_q_values, target_q_values)
         # optimize
         self.optimizer.zero_grad()

@@ -5,3 +5,6 @@ torch
 torchvision
 tqdm
 lz4
+tensorflow
+tensorboard
+opencv-python

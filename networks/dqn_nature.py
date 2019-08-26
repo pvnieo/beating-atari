@@ -4,7 +4,7 @@ import torch.nn as nn
 from torch.autograd import Variable
 
 
-class DQN15(nn.Module):
+class DQNNatureNetwork(nn.Module):
     """implementation of the network used in the DQN 2015 paper
     """
     def __init__(self, input_shape, nc=4, num_actions=18):
