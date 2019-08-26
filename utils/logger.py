@@ -21,7 +21,8 @@ class Logger:
         self.tb_writer = SummaryWriter(log_dir=self.tb_dir)
 
         # Create a custom logger
-        self.logger = logging.getLogger("logger")
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.DEBUG)
 
         # Create handlers
         c_handler = logging.StreamHandler()
@@ -30,17 +31,14 @@ class Logger:
         f_handler.setLevel(logging.DEBUG)
 
         # Create formatters and add it to handlers
-        c_format = logging.Formatter('%(levelname)s - %(message)s')
-        f_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+        c_format = logging.Formatter('%(levelname)s :: %(message)s')
+        f_format = logging.Formatter('%(asctime)s :: %(levelname)s :: %(message)s', datefmt='%d-%b-%y %H:%M:%S')
         c_handler.setFormatter(c_format)
         f_handler.setFormatter(f_format)
 
         # Add handlers to the logger
         self.logger.addHandler(c_handler)
         self.logger.addHandler(f_handler)
-        self.log('This is an info', "info")
-        self.log('This is a warning', "warning")
-        self.log('This is an error', "error")
 
     def log(self, message, level="debug"):
         if level == "debug":

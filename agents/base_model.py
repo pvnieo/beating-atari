@@ -125,13 +125,16 @@ class DQNBasedModel(BaseModel):
                     # log episode
                     self.logger.tb_writer.add_scalars("history", {"reward": sum(ep_reward), "loss": np.mean(
                         ep_loss), "steps": step, "mem_size": len(self.memory)}, episode)
-                    self.logger.log(f"Episode {episode}/{n_episodes}:: reward: {sum(ep_reward)} | steps: {step}", level="info")
+                    self.logger.log(f"Episode {episode}/{n_episodes} ({int(episode/n_episodes * 100)}%) :: " +
+                        f"reward: {sum(ep_reward)} | steps: {step} | total_steps: {self.total_steps}", level="info")
 
                     # save models
                     if self.total_steps % save_every == 0:
                         self.save()
                     if self.total_steps % update_target_every == 0:
                         self.update_target_net()
+
+                    break
 
         self.save()
 
