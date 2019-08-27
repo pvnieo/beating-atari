@@ -20,7 +20,7 @@ class DQNNips(DQNBasedModel):
         # Compute targets: y_i = r_i + gamma * max Q
         target_q_values = torch.FloatTensor(rewards) + self.discount_factor * torch.max(target_q_values, dim=1)[0]
         # compute loss
-        predicted_q_values = torch.max(self.online_net(states), dim=1)[0]
+        predicted_q_values = torch.gather(self.online_net(states), 1, torch.LongTensor(actions).reshape(-1, 1))
         loss = smooth_l1_loss(predicted_q_values, target_q_values)
         # optimize
         self.optimizer.zero_grad()
@@ -47,7 +47,7 @@ class DQN(DQNBasedModel):
         # Compute targets: y_i = r_i + gamma * max Q-
         target_q_values = torch.FloatTensor(rewards) + self.discount_factor * torch.max(target_q_values, dim=1)[0]
         # compute loss
-        predicted_q_values = torch.max(self.online_net(states), dim=1)[0]
+        predicted_q_values = torch.gather(self.online_net(states), 1, torch.LongTensor(actions).reshape(-1, 1))
         loss = smooth_l1_loss(predicted_q_values, target_q_values)
         # optimize
         self.optimizer.zero_grad()

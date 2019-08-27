@@ -6,7 +6,6 @@ from os.path import join, isfile, exists
 import numpy as np
 import torch
 from tqdm import tqdm
-# project
 
 
 class BaseModel:
@@ -126,7 +125,7 @@ class DQNBasedModel(BaseModel):
                     self.logger.tb_writer.add_scalars("history", {"reward": sum(ep_reward), "loss": np.mean(
                         ep_loss), "steps": step, "mem_size": len(self.memory)}, episode)
                     self.logger.log(f"Episode {episode}/{n_episodes} ({int(episode/n_episodes * 100)}%) :: " +
-                        f"reward: {sum(ep_reward)} | steps: {step} | total_steps: {self.total_steps}", level="info")
+                                    f"reward: {sum(ep_reward)} | steps: {step} | total_steps: {self.total_steps}", level="info")
 
                     # save models
                     if self.total_steps % save_every == 0:

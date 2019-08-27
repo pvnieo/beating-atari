@@ -20,9 +20,9 @@ class DoubleDQN(DQNBasedModel):
         target_q_values[is_terminals] = 0
         # Compute targets: y_i = r_i + gamma * Q- (max Q)
         target_q_values = torch.FloatTensor(rewards) + self.discount_factor * \
-            target_q_values[range(states.size(0)), torch.max(self.online_net(next_states), dim=1)]
+            torch.gather(target_q_values, 1, torch.max(self.online_net(next_states), dim=1)[1].reshape(-1, 1))
         # compute loss
-        predicted_q_values = torch.max(self.online_net(states), dim=1)[0]
+        predicted_q_values = torch.gather(self.online_net(states), 1, torch.LongTensor(actions).reshape(-1, 1))
         loss = smooth_l1_loss(predicted_q_values, target_q_values)
         # optimize
         self.optimizer.zero_grad()
