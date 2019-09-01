@@ -1,5 +1,3 @@
-# stdlib
-from collections import deque
 # 3p
 import numpy as np
 import torch

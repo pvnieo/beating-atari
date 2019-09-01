@@ -9,6 +9,7 @@ import gym
 from agents.dqn import DQNNips, DQN
 from agents.double_dqn import DoubleDQN
 from envs.gym_env import GymEnv
+from networks.simple_fc import FCNetwork
 from networks.dqn_nature import DQNNatureNetwork
 from networks.dqn_nips import DQNNipsNetwork
 from utils.epsilon_greedy import AnnealedEpsilonGreedyPolicy
@@ -23,7 +24,7 @@ ENV_NAME = 'Breakout-v4'
 network = "dqn_nature"  # [dqn_nature, dqn_nips]
 agent_name = "double_dqn"  # [dqn, dqn_nips, double_dqn]
 
-EXPLORATION_STEPS = 1000000
+EXPLORATION_STEPS = 1000  # 1000000
 MEM_MAX_SIZE = 1000000
 TARGET_NETWORK_UPDATE = 10  # 10000
 LR = 0.00025

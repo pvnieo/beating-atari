@@ -66,7 +66,7 @@ class DQNBasedModel(BaseModel):
     def eval(self):
         self.online_net.eval()
 
-    def predict_action(self, state):
+    def act(self, state):
         return torch.argmax(self.online_net(state.unsqueeze(0)))
 
     def populate_memory(self, replay_start_size):
@@ -103,7 +103,7 @@ class DQNBasedModel(BaseModel):
                 if self.policy.explore():
                     action = self.env.action_space.sample()
                 else:
-                    action = self.predict_action(state)
+                    action = self.act(state)
 
                 # excute action
                 next_state, reward, is_terminal, _ = self.env.step(action)
@@ -122,10 +122,15 @@ class DQNBasedModel(BaseModel):
 
                 if is_terminal or (step > ep_max_step):
                     # log episode
-                    self.logger.tb_writer.add_scalars("history", {"reward": sum(ep_reward), "loss": np.mean(
-                        ep_loss), "steps": step, "mem_size": len(self.memory)}, episode)
+                    self.logger.tb_writer.add_scalars("history",
+                                                      {"reward": sum(ep_reward),
+                                                       "loss": np.mean(ep_loss),
+                                                       "steps": step,
+                                                       "epsilon": self.policy.epsilon,
+                                                       "mem_size": len(self.memory)}, episode)
                     self.logger.log(f"Episode {episode}/{n_episodes} ({int(episode/n_episodes * 100)}%) :: " +
-                                    f"reward: {sum(ep_reward)} | steps: {step} | total_steps: {self.total_steps}", level="info")
+                                    f"reward: {sum(ep_reward)} | steps: {step} | total_steps: {self.total_steps}" +
+                                    f" epsilon: {round(self.policy.epsilon, 3)}", level="info")
 
                     # save models
                     if self.total_steps % save_every == 0:
