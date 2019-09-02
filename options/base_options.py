@@ -8,7 +8,7 @@ class BaseOptions:
 
     def initialize(self):
         self.parser.add_argument("--output", help="The directory where all the outputs are saved", type=str, default="outputs")
-        self.parser.add_argument("--env", help="Environnement name", type=str, default="Breakout-v4")
+        self.parser.add_argument("--env", help="Environnement name. Only Gym env are supported", type=str, default="Breakout-v4")
         self.parser.add_argument("--network", help="Name of NN used to approximate Q function", type=str,
                                  choices=["simple_fc", "dqn_nips", "dqn_nature"], default="dqn_nature")
         self.parser.add_argument("--agent", help="RL Algorithm used", type=str,

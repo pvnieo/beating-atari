@@ -1,7 +1,5 @@
-# stdlib
-import argparse
 # project
-from base_options import BaseOptions
+from .base_options import BaseOptions
 
 
 class TrainOptions(BaseOptions):
@@ -9,7 +7,7 @@ class TrainOptions(BaseOptions):
         super().__init__()
 
     def initialize(self):
-        parser = BaseOptions.initialize()
+        parser = BaseOptions().initialize()
         parser.add_argument("--exp_steps", help="Number of steps over which epsilon is linearly annealed", type=int, default=1000000)
         parser.add_argument("--epsilon_min", help="Final value of epsilon in epsilon greedy expoloration", type=float, default=0.1)
         parser.add_argument("--epsilon_max", help="First value of epsilon in epsilon greedy expoloration", type=float, default=1.)
@@ -34,3 +32,8 @@ class TrainOptions(BaseOptions):
         parser.add_argument("--ep_max_step", help="Maximum number of steps per episode", type=int, default=1000)
         parser.add_argument("--replay_start", help="Initial number of experiences to populate the replay memory", type=int, default=50000)
         parser.add_argument("--freq_save_model", help="Frequency of saving model weights (Num of steps)", type=int, default=200)
+        return parser
+
+    def parse(self):
+        parser = self.initialize()
+        return parser.parse_args()

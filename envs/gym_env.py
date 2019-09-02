@@ -22,6 +22,7 @@ class GymEnv(Env):
         self.env = wrapper(env, terminal_on_life_loss=terminal_on_life_loss, noop_max=noop_max, frame_skip=frame_skip,
                            num_stack=num_stack, screen_size=screen_size, grayscale=grayscale, clip_reward=clip_reward)
         self.action_space = env.action_space
+        self.observation_space = env.observation_space
 
     def reset(self):
         frame = self.env.reset()

@@ -6,7 +6,7 @@ class FCNetwork(nn.Module):
     """implementation of a simple fully connected network to use it
        to debug implemented agents on simple games as cartpole
     """
-    def __init__(self, input_shape, nc=4, num_actions=18):
+    def __init__(self, input_shape, num_actions=18):
         super().__init__()
 
         self.input_shape = tuple(input_shape)

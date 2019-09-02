@@ -6,8 +6,8 @@ from .base_model import DQNBasedModel
 
 
 class DQNNips(DQNBasedModel):
-    def __init__(self, env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor=0.99):
-        super().__init__(env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor)
+    def __init__(self, env, network, policy, memory, optimizer, outputs_dir, logger, discount_factor=0.99):
+        super().__init__(env, network, policy, memory, optimizer, outputs_dir, logger, discount_factor)
 
     @property
     def name(self):
@@ -18,7 +18,8 @@ class DQNNips(DQNBasedModel):
         # If terminal, we use y_i = r_i instead of y_i = r_i + gamma * max Q
         target_q_values[is_terminals] = 0
         # Compute targets: y_i = r_i + gamma * max Q
-        target_q_values = torch.FloatTensor(rewards) + self.discount_factor * torch.max(target_q_values, dim=1)[0]
+        target_q_values = (torch.FloatTensor(rewards) +
+                           self.discount_factor * torch.max(target_q_values, dim=1)[0]).reshape(-1, 1)
         # compute loss
         predicted_q_values = torch.gather(self.online_net(states), 1, torch.LongTensor(actions).reshape(-1, 1))
         loss = smooth_l1_loss(predicted_q_values, target_q_values)
@@ -33,8 +34,8 @@ class DQNNips(DQNBasedModel):
 
 
 class DQN(DQNBasedModel):
-    def __init__(self, env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor=0.99):
-        super().__init__(env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor)
+    def __init__(self, env, network, policy, memory, optimizer, outputs_dir, logger, discount_factor=0.99):
+        super().__init__(env, network, policy, memory, optimizer, outputs_dir, logger, discount_factor)
 
     @property
     def name(self):
@@ -45,7 +46,8 @@ class DQN(DQNBasedModel):
         # If terminal, we use y_i = r_i instead of y_i = r_i + gamma * max Q
         target_q_values[is_terminals] = 0
         # Compute targets: y_i = r_i + gamma * max Q-
-        target_q_values = torch.FloatTensor(rewards) + self.discount_factor * torch.max(target_q_values, dim=1)[0]
+        target_q_values = (torch.FloatTensor(rewards) +
+                           self.discount_factor * torch.max(target_q_values, dim=1)[0]).reshape(-1, 1)
         # compute loss
         predicted_q_values = torch.gather(self.online_net(states), 1, torch.LongTensor(actions).reshape(-1, 1))
         loss = smooth_l1_loss(predicted_q_values, target_q_values)

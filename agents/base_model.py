@@ -31,11 +31,11 @@ class BaseModel:
 
 
 class DQNBasedModel(BaseModel):
-    def __init__(self, env, model, policy, memory, optimizer, outputs_dir, logger, discount_factor):
+    def __init__(self, env, network, policy, memory, optimizer, outputs_dir, logger, discount_factor):
         super().__init__(outputs_dir, logger)
         self.env = env
-        self.online_net = model
-        self.target_net = deepcopy(model)
+        self.online_net = network
+        self.target_net = deepcopy(network)
         self.update_target_net()
         self.target_net.train()
         for param in self.target_net.parameters():
@@ -130,7 +130,7 @@ class DQNBasedModel(BaseModel):
                                                        "mem_size": len(self.memory)}, episode)
                     self.logger.log(f"Episode {episode}/{n_episodes} ({int(episode/n_episodes * 100)}%) :: " +
                                     f"reward: {sum(ep_reward)} | steps: {step} | total_steps: {self.total_steps}" +
-                                    f" epsilon: {round(self.policy.epsilon, 3)}", level="info")
+                                    f" | epsilon: {round(self.policy.epsilon, 3)}", level="info")
 
                     # save models
                     if self.total_steps % save_every == 0:
