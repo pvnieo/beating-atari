@@ -1,4 +1,5 @@
 # std
+from time import sleep
 from copy import deepcopy
 from os import listdir, makedirs, remove
 from os.path import join, isfile, exists
@@ -67,7 +68,7 @@ class DQNBasedModel(BaseModel):
         self.online_net.eval()
 
     def act(self, state):
-        return torch.argmax(self.online_net(state.unsqueeze(0)))
+        return int(torch.argmax(self.online_net(state.unsqueeze(0))))
 
     def populate_memory(self, replay_start_size):
         state = self.env.reset()
@@ -76,15 +77,14 @@ class DQNBasedModel(BaseModel):
             action = self.env.action_space.sample()
             next_state, reward, is_terminal, _ = self.env.step(action)
 
+            self.memory.add((state, action, reward, next_state, is_terminal))
             if is_terminal:
-                self.memory.add((state, action, reward, next_state, is_terminal))
                 # Restart env
                 state = self.env.reset()
             else:
-                self.memory.add((state, action, reward, next_state, is_terminal))
                 state = next_state
 
-    def learn(self, n_episodes, ep_max_step, replay_start_size, save_every, update_target_every):
+    def learn(self, n_episodes, ep_max_step, replay_start_size, save_every, update_target_every, render_every):
         # populate memory
         self.populate_memory(replay_start_size)
 
@@ -97,6 +97,7 @@ class DQNBasedModel(BaseModel):
             ep_reward, ep_loss = [], []
             state = self.env.reset()
             step = 0
+            render = (episode % render_every == 0)
             while True:
                 step += 1
                 self.total_steps += 1
@@ -119,6 +120,11 @@ class DQNBasedModel(BaseModel):
                 is_terminals = [x[4] for x in batch]
                 loss = self.fit_batch(states, actions, rewards, next_states, is_terminals)
                 ep_loss.append(loss)
+
+                # render environment
+                if render:
+                    self.env.render()
+                    sleep(0.05)
 
                 if is_terminal or (step > ep_max_step):
                     # log episode

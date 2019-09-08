@@ -236,8 +236,11 @@ def wrapper(env, terminal_on_life_loss=True, noop_max=30, frame_skip=4,
         env = NoopResetEnv(env, noop_max=10)
     if frame_skip:
         env = MaxAndSkipEnv(env, skip=frame_skip)
-    if 'FIRE' in env.unwrapped.get_action_meanings():
-        env = FireResetEnv(env)
+    try:
+        if 'FIRE' in env.unwrapped.get_action_meanings():
+            env = FireResetEnv(env)
+    except Exception:
+        pass
     if screen_size or grayscale:
         env = WarpFrame(env, *(screen_size + (grayscale,)))
     if num_stack:

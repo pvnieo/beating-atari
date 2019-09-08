@@ -6,7 +6,7 @@ from .dqn_nature import DQNNatureNetwork
 
 def create_network(args, num_actions, input_shape):
     if args.network == "simple_fc":
-        network = FCNetwork(input_shape, num_actions=num_actions)
+        network = FCNetwork(input_shape, num_actions=num_actions, nc=args.history_length)
     elif args.network == "dqn_nips":
         network = DQNNipsNetwork((args.screen_width, args.screen_height), nc=args.history_length, num_actions=num_actions)
     elif args.network == "dqn_nature":

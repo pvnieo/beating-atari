@@ -79,7 +79,7 @@ def main():
 
     # train agent
     agent.learn(n_episodes=args.n_ep, ep_max_step=args.ep_max_step, replay_start_size=args.replay_start,
-                save_every=args.freq_save_model, update_target_every=args.freq_target_update)
+                save_every=args.freq_save_model, update_target_every=args.freq_target_update, render_every=args.freq_render)
 
 
 if __name__ == '__main__':
